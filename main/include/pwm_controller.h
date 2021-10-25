@@ -1,17 +1,13 @@
 #ifndef PWM_CONTROLLER_H
 #define PWM_CONTROLLER_H
 
-#include <pca9685.h>
+// #include <pca9685.h>
 
-static const char *PWM_TAG = "pca9685_test";
 
-#define ADDR PCA9685_ADDR_BASE
 
-#define PWM_FREQ_HZ 49
-
-#define SDA_GPIO 21
-#define SCL_GPIO 22
-
+// #define SDA_GPIO 21
+// #define SCL_GPIO 22
+/*
 void pwm_controller_init(i2c_dev_t * dev)
 {
     //i2c_dev_t dev;
@@ -39,5 +35,6 @@ void pwm_controller_set(i2c_dev_t * dev, uint16_t * data){
         }
     }
 }
+*/
 
 #endif

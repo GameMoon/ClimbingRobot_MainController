@@ -8,14 +8,14 @@
 #define MIDDLE_POSITION 285
 
 static const char *ROBOT_TAG = "robot_controller";
-static i2c_dev_t pwm_dev;
+// static i2c_dev_t pwm_dev;
 
 void robot_controller_setup(){
-    pwm_controller_init(&pwm_dev);
+    //pwm_controller_init(&pwm_dev);
 }
 
 void robot_controller_set_servos(uint16_t * raw_data,int size){
-    uint16_t data[16] = {0};
+    /*uint16_t data[16] = {0};
     data[4] = raw_data[0]; // 1 coxa
     data[5] = raw_data[1]; // 1 femur
     data[6] = raw_data[2]; // 1 tibia
@@ -32,7 +32,7 @@ void robot_controller_set_servos(uint16_t * raw_data,int size){
     data[10] = raw_data[10]; // 4 femur
     data[9] = raw_data[11]; // 4 tibia
 
-    pwm_controller_set(&pwm_dev, data);
+    pwm_controller_set(&pwm_dev, data);*/
 }
 
 static void robot_controller_tcp_msg(const int sock)
