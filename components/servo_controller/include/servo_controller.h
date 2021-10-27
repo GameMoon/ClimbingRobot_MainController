@@ -26,6 +26,7 @@ void init_servo_controller();
 void deinit_servo_controller();
 
 void set_servo_psu(uint8_t gpio_state);
+void soft_servo_stop();
 
 uint8_t read_servo_positions(uint8_t * data);
 uint8_t set_single_servo_position(uint8_t index, uint8_t value);

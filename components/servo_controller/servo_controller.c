@@ -127,3 +127,8 @@ uint8_t set_coils(uint8_t value){
 void set_servo_psu(uint8_t state){
     gpio_set_level(PSU_PIN,state);
 }
+
+void soft_servo_stop(){
+    uint8_t stop_pos[12] = {0x01};
+    set_servo_positions(stop_pos);
+}
