@@ -1,30 +1,8 @@
-#include <string.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "esp_system.h"
-#include "esp_wifi.h"
-#include "esp_event.h"
-#include "esp_log.h"
-#include "nvs_flash.h"
+#include "wifi_setup.h"
 
-#include "lwip/err.h"
-#include "lwip/sys.h"
-
-#define ESP_WIFI_SSID CONFIG_ESP_WIFI_SSID
-#define ESP_WIFI_PASS CONFIG_ESP_WIFI_PASSWORD
-#define ESP_WIFI_CHANNEL 1//CONFIG_ESP_WIFI_CHANNEL
-#define MAX_STA_CONN 4//CONFIG_ESP_MAX_STA_CONN
-
-#define ESP_MAXIMUM_RETRY CONFIG_ESP_MAXIMUM_RETRY
-
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT BIT1
 
 
 static const char *WIFI_TAG = "WIFI_TASK";
-static EventGroupHandle_t s_wifi_event_group;
-static int s_retry_num = 0;
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
@@ -68,13 +46,23 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
+void wifi_init(){
+    #ifdef CONFIG_ESP_WIFI_MODE
+        ESP_LOGI(WIFI_TAG, "Soft AP mode");
+        wifi_init_softap();
+    #else
+        ESP_LOGI(WIFI_TAG, "Station mode");
+        wifi_init_sta();
+    #endif
+}
+
 void wifi_init_sta(void)
 {
     s_wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());
 
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    // ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -95,8 +83,8 @@ void wifi_init_sta(void)
 
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = ESP_WIFI_SSID,
-            .password = ESP_WIFI_PASS,
+            .ssid = CONFIG_ESP_WIFI_SSID,
+            .password = CONFIG_ESP_WIFI_PASSWORD,
             /* Setting a password implies station will connect to all security modes including WEP/WPA.
              * However these modes are deprecated and not advisable to be used. Incase your Access point
              * doesn't support WPA2, these mode can be enabled by commenting below line */
@@ -125,13 +113,13 @@ void wifi_init_sta(void)
      * happened. */
     if (bits & WIFI_CONNECTED_BIT)
     {
-        ESP_LOGI(WIFI_TAG, "connected to ap SSID:%s password:%s",
-                 ESP_WIFI_SSID, ESP_WIFI_PASS);
+        ESP_LOGI(WIFI_TAG, "connected to ap SSID:%s",
+                 CONFIG_ESP_WIFI_SSID);
     }
     else if (bits & WIFI_FAIL_BIT)
     {
-        ESP_LOGI(WIFI_TAG, "Failed to connect to SSID:%s, password:%s",
-                 ESP_WIFI_SSID, ESP_WIFI_PASS);
+        ESP_LOGI(WIFI_TAG, "Failed to connect to SSID:%s",
+                 CONFIG_ESP_WIFI_SSID);
     }
     else
     {
@@ -144,11 +132,10 @@ void wifi_init_sta(void)
     vEventGroupDelete(s_wifi_event_group);
 }
 
-
 void wifi_init_softap(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    // ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_ap();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -162,14 +149,14 @@ void wifi_init_softap(void)
 
     wifi_config_t wifi_config = {
         .ap = {
-            .ssid = ESP_WIFI_SSID,
-            .ssid_len = strlen(ESP_WIFI_SSID),
+            .ssid = CONFIG_ESP_WIFI_SSID,
+            .ssid_len = strlen(CONFIG_ESP_WIFI_SSID),
             .channel = ESP_WIFI_CHANNEL,
-            .password = ESP_WIFI_PASS,
+            .password = CONFIG_ESP_WIFI_PASSWORD,
             .max_connection = MAX_STA_CONN,
             .authmode = WIFI_AUTH_WPA_WPA2_PSK},
     };
-    if (strlen(ESP_WIFI_PASS) == 0)
+    if (strlen(CONFIG_ESP_WIFI_PASSWORD) == 0)
     {
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;
     }
@@ -178,6 +165,6 @@ void wifi_init_softap(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    ESP_LOGI(WIFI_TAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d",
-             ESP_WIFI_SSID, ESP_WIFI_PASS, ESP_WIFI_CHANNEL);
+    ESP_LOGI(WIFI_TAG, "wifi_init_softap finished. SSID:%s channel:%d",
+             CONFIG_ESP_WIFI_SSID, ESP_WIFI_CHANNEL);
 }

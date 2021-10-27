@@ -1,4 +1,10 @@
-menu "ClimbingRobot Configuration"
+menu "ClimbingRobot Network Configuration"
+    
+    config ESP_WIFI_MODE
+        bool "Is SoftAP mode"
+        default n
+        help
+            If true, then it creates an AP otherwise it's a normal client
 
     config ESP_WIFI_SSID
         string "WiFi SSID"

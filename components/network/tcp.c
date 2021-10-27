@@ -1,41 +1,59 @@
-#ifndef TCP_H
-#define TCP_H
 
-#include "esp_system.h"
-#include "esp_wifi.h"
-#include "esp_event.h"
-#include "esp_log.h"
-#include "nvs_flash.h"
-#include "esp_netif.h"
+#include "tcp.h"
 
-#include "lwip/err.h"
-#include "lwip/sockets.h"
-#include "lwip/sys.h"
-#include <lwip/netdb.h>
-
-#include "robot_controller.h"
-
-#define PORT 3333
-
-// static uint16_t servo_pos[16] = {285};
-
-static const char * TCP_TAG = "tcp_task";
+static const char *TCP_TAG = "tcp_task";
 
 
-static void tcp_server_task(void *pvParameters)
+
+void manage_tcp_message(const int sock)
+{
+    int len;
+    uint8_t rx_buffer[128];
+    uint8_t positions[13];
+
+    do
+    {
+        len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
+        if (len < 0)
+        {
+            ESP_LOGE(TCP_TAG, "Error occurred during receiving: errno %d", errno);
+        }
+        else if (len == 0)
+        {
+            ESP_LOGW(TCP_TAG, "Connection closed");
+        }
+        else
+        {
+            rx_buffer[len] = 0; // Null-terminate whatever is received and treat it like a string
+            ESP_LOGI(TCP_TAG, "Received %d bytes", len);
+            tcp_read_callback(rx_buffer, len);
+            /*if (len == 13)
+            {
+                memcpy(positions, rx_buffer, 13);
+                // robot_controller_set_servos(raw_positions, 12);
+                set_servo_positions(positions);
+            }*/
+        }
+        tcp_write_callback(sock);
+        /*
+        read_servo_positions(positions);
+        send(sock, positions, 12, 0);*/
+
+    } while (len > 0);
+}
+
+void tcp_server_task(void *pvParameters)
 {
     char addr_str[128];
     int addr_family = (int)pvParameters;
     int ip_protocol = 0;
     struct sockaddr_in6 dest_addr;
 
-  
     struct sockaddr_in *dest_addr_ip4 = (struct sockaddr_in *)&dest_addr;
     dest_addr_ip4->sin_addr.s_addr = htonl(INADDR_ANY);
     dest_addr_ip4->sin_family = AF_INET;
     dest_addr_ip4->sin_port = htons(PORT);
     ip_protocol = IPPROTO_IP;
-    
 
     int listen_sock = socket(addr_family, SOCK_STREAM, ip_protocol);
     if (listen_sock < 0)
@@ -44,13 +62,6 @@ static void tcp_server_task(void *pvParameters)
         vTaskDelete(NULL);
         return;
     }
-#if defined(CONFIG_EXAMPLE_IPV4) && defined(CONFIG_EXAMPLE_IPV6)
-    // Note that by default IPV6 binds to both protocols, it is must be disabled
-    // if both protocols used at the same time (used in CI)
-    int opt = 1;
-    setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-    setsockopt(listen_sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt, sizeof(opt));
-#endif
 
     ESP_LOGI(TCP_TAG, "Socket created");
 
@@ -70,7 +81,7 @@ static void tcp_server_task(void *pvParameters)
         goto CLEAN_UP;
     }
 
-    robot_controller_setup();
+    // tcp_init_callback();
 
     while (1)
     {
@@ -91,7 +102,8 @@ static void tcp_server_task(void *pvParameters)
 
         ESP_LOGI(TCP_TAG, "Socket accepted ip address: %s", addr_str);
 
-        robot_controller_tcp_msg(sock);
+        send(sock,"hello",6,0);
+        manage_tcp_message(sock);
 
         shutdown(sock, 0);
         close(sock);
@@ -101,5 +113,3 @@ CLEAN_UP:
     close(listen_sock);
     vTaskDelete(NULL);
 }
-
-#endif
