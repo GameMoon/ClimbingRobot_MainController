@@ -1,45 +1,40 @@
 #ifndef ROBOT_CONTROLLER_H
 #define ROBOT_CONTROLLER_H
 
-#include "pwm_controller.h"
+// #include "servo_controller.h"
+#include <stdio.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include "freertos/event_groups.h"
+
+#include "esp_system.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_log.h"
+
 
 #define MIN_POSITION 82  //204
 #define MAX_POSITION 491 //409
 #define MIDDLE_POSITION 285
 
-static const char *ROBOT_TAG = "robot_controller";
-// static i2c_dev_t pwm_dev;
+#define NUMBER_OF_SERVOS 12
 
-void robot_controller_setup(){
-    //pwm_controller_init(&pwm_dev);
-}
+uint8_t servo_positions[NUMBER_OF_SERVOS];
 
-void robot_controller_set_servos(uint16_t * raw_data,int size){
-    /*uint16_t data[16] = {0};
-    data[4] = raw_data[0]; // 1 coxa
-    data[5] = raw_data[1]; // 1 femur
-    data[6] = raw_data[2]; // 1 tibia
+void robot_event_handler(void *arg, esp_event_base_t event_base,
+                                int32_t event_id, void *event_data);
 
-    data[3] = raw_data[3]; // 2 coxa
-    data[2] = raw_data[4]; // 2 femur
-    data[1] = raw_data[5]; // 2 tibia
+void robot_controller_init();
+void read_callback(uint8_t * data, uint8_t len);
+void write_callback(int sock);
 
-    data[12] = raw_data[6]; // 3 coxa
-    data[13] = raw_data[7]; // 3 femur
-    data[14] = raw_data[8]; // 3 tibia
 
-    data[11] = raw_data[9]; // 4 coxa
-    data[10] = raw_data[10]; // 4 femur
-    data[9] = raw_data[11]; // 4 tibia
-
-    pwm_controller_set(&pwm_dev, data);*/
-}
-
+/*
 static void robot_controller_tcp_msg(const int sock)
 {
     int len;
     char rx_buffer[128];
-    uint16_t raw_positions[12];
+    uint8_t positions[13];
 
     do
     {
@@ -57,13 +52,17 @@ static void robot_controller_tcp_msg(const int sock)
             rx_buffer[len] = 0; // Null-terminate whatever is received and treat it like a string
             ESP_LOGI(ROBOT_TAG, "Received %d bytes", len);
 
-            if (len == 24)
+            if (len == 13)
             {
-                memcpy(raw_positions, rx_buffer, 2 * 12);
-                robot_controller_set_servos(raw_positions, 12);
+                memcpy(positions, rx_buffer, 13);
+                //robot_controller_set_servos(raw_positions, 12);
+                set_servo_positions(positions);
             }
         }
+        read_servo_positions(positions);
+        send(sock, positions, 12, 0);
+
     } while (len > 0);
 }
-
+*/
 #endif

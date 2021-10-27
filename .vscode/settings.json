@@ -10,7 +10,8 @@
   "C_Cpp.intelliSenseEngine": "Tag Parser",
   "idf.portWin": "COM9",
   "files.associations": {
-    "pca9685.h": "c"
+    "pca9685.h": "c",
+    "wifi_setup.C": "cpp"
   },
   "idf.flashType": "UART"
 }
