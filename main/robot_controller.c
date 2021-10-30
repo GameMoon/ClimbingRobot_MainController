@@ -70,6 +70,7 @@ void led_status_task(void *pvParameters)
     rgbVal color = makeRGBVal(0, 0, 0);
     ws2812_init(GPIO_NUM_0);
     ws2812_setColors(1, &color);
+   
     while(1){
 
         if (robot_status == 0)
@@ -91,11 +92,15 @@ void led_status_task(void *pvParameters)
             ws2812_setColors(1, &color);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
-        else if (robot_status == 2){
+        else if (robot_status == 2 && old_status != robot_status){
             color.r = 0;
             color.g = 255;
             color.b = 0;
             ws2812_setColors(1, &color);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            color.g = 0;
+            ws2812_setColors(1, &color);
+            old_status = robot_status;
         }
         else if(robot_status == 3){
             color.r = 0;
@@ -107,6 +112,9 @@ void led_status_task(void *pvParameters)
             ws2812_setColors(1, &color);
             vTaskDelay(3000 / portTICK_PERIOD_MS);
         }
+
+        if(old_status == 2 && robot_status != 2) old_status = robot_status;
+       
     }
     vTaskDelete(NULL);
 }

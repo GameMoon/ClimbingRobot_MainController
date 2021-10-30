@@ -16,6 +16,7 @@
 
 
 #include "ws2812.h"
+#include "servo_controller.h"
 
 // calibration_t cal = {
 //     .mag_offset = {.x = 25.183594, .y = 57.519531, .z = -62.648438},
@@ -41,24 +42,28 @@ void app_main()
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     robot_controller_init();
 
-    //rgbVal color = makeRGBVal(0,0,255);
-    //ws2812_init(GPIO_NUM_0);
-    //ws2812_setColors(1,&color);
-    //ESP_LOGW("LED", "led_init_ok %d",led_init_ok);
+    
     wifi_init();
-    //robot_controller_init();
     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void *)AF_INET, 5, NULL);
+    
+    // TEST
+    // rgbVal color = makeRGBVal(0,0,255);
+    // ws2812_init(GPIO_NUM_0);
+    // ws2812_setColors(1,&color);
+    // ESP_LOGW("LED", "led_init_ok %d",led_init_ok);
     ////xTaskCreatePinnedToCore(pca9685_test, TAG, configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL, APP_CPU_NUM);
 
     /* SERVO_CONTROLLER_TEST*/
    
-    /*uint8_t data[8];
-   read_servo_positions(data);
-   set_single_servo_position(0,100);
-   uint8_t test_data[12] = { 0x43 };
-   set_servo_positions(test_data);
-   set_coils(0x0F);
-   deinit_servo_controller();*/
+    //uint8_t data[8];
+   //read_servo_positions(data);
+   //set_single_servo_position(0,100);
+   /* init_servo_controller();
+    set_servo_psu(1);
+    uint8_t test_data[12] = {0x43};
+    set_servo_positions(test_data);*/
+    /*set_coils(0x0F);
+    deinit_servo_controller();*/
     /*i2c_mpu9250_init(&cal);
     calibrate_accel();*/
 }

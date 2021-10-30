@@ -114,8 +114,25 @@ uint8_t set_single_servo_position(uint8_t index, uint8_t value){
 }
 
 uint8_t set_servo_positions(uint8_t *positions){
-    uint8_t command[13] = {WRITE_ALL_REG};
-    memcpy(&command[1],positions,12);
+    uint8_t command[13] = {0x00};
+    command[0] = WRITE_ALL_REG;
+
+    command[3] = positions[0]; //coxa
+    command[2] = positions[1]; //femur
+    command[1] = positions[2]; //tiba
+
+    command[4] = positions[3];
+    command[5] = positions[4];
+    command[6] = positions[5];
+
+    command[7] = positions[6];
+    command[8] = positions[7];
+    command[9] = positions[8];
+
+    command[12] = positions[9];
+    command[11] = positions[10];
+    command[10] = positions[11];
+    //memcpy(&command[1],positions,12);
     return send_i2c_command(command, sizeof(command));
 }
 
