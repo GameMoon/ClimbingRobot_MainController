@@ -2,8 +2,10 @@
 #include "tcp.h"
 #include "servo_controller.h"
 #include "ws2812.h"
+#include "wifi_setup.h"
 
 static const char *ROBOT_TAG = "robot_controller";
+uint8_t wifi_try = 0;
 
 void robot_event_handler(void *handler_args, esp_event_base_t event_base, int32_t event_id, void *event_data){
 
@@ -11,6 +13,14 @@ void robot_event_handler(void *handler_args, esp_event_base_t event_base, int32_
     {
         ESP_LOGW(ROBOT_TAG, "WIFI connected and got IP");
         robot_status = 2;
+    }
+    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
+    {
+        if (wifi_try == ESP_MAXIMUM_RETRY)
+        {
+            robot_status = 0;
+        }
+        else wifi_try++;
     }
 }
 
@@ -39,6 +49,7 @@ void client_disconnected(){
 
 void robot_controller_init(){
     ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT_STA_GOT_IP, ESP_EVENT_ANY_ID, robot_event_handler, NULL, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, robot_event_handler, NULL, NULL));
 
     tcp_read_callback = read_callback;
     tcp_write_callback = write_callback;
@@ -66,7 +77,7 @@ void led_status_task(void *pvParameters)
             color.r = 255;
             color.g = 0;
             color.b = 0;
-            ws2812_setColors(1, &color);
+            ws2812_setColors(1, &color);       
         }
         else if (robot_status == 1)
         {
@@ -74,6 +85,11 @@ void led_status_task(void *pvParameters)
             color.g = 255;
             color.b = 0;
             ws2812_setColors(1, &color);
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+            color.r = 0;
+            color.g = 0;
+            ws2812_setColors(1, &color);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
         else if (robot_status == 2){
             color.r = 0;
