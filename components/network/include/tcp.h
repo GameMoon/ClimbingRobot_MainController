@@ -19,7 +19,8 @@
 
 void (*tcp_read_callback)(uint8_t *data, uint8_t len);
 void (*tcp_write_callback)(int sock);
-
+void (*tcp_client_connected)(void);
+void (*tcp_client_disconnected)(void);
 
 void tcp_server_task(void *pvParameters);
 

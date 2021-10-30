@@ -102,8 +102,10 @@ void tcp_server_task(void *pvParameters)
 
         ESP_LOGI(TCP_TAG, "Socket accepted ip address: %s", addr_str);
 
+        tcp_client_connected();
         send(sock,"hello",6,0);
         manage_tcp_message(sock);
+        tcp_client_disconnected();
 
         shutdown(sock, 0);
         close(sock);

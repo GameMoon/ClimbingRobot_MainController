@@ -19,6 +19,8 @@
 
 #define NUMBER_OF_SERVOS 12
 
+
+static uint8_t robot_status = 1;
 uint8_t servo_positions[NUMBER_OF_SERVOS];
 
 void robot_event_handler(void *arg, esp_event_base_t event_base,
@@ -28,6 +30,8 @@ void robot_controller_init();
 void read_callback(uint8_t * data, uint8_t len);
 void write_callback(int sock);
 
+
+void led_status_task();
 
 /*
 static void robot_controller_tcp_msg(const int sock)

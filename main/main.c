@@ -15,6 +15,8 @@
 #include "calibrate.h"
 
 
+#include "ws2812.h"
+
 // calibration_t cal = {
 //     .mag_offset = {.x = 25.183594, .y = 57.519531, .z = -62.648438},
 //     .mag_scale = {.x = 1.513449, .y = 1.557811, .z = 1.434039},
@@ -27,9 +29,6 @@
 // };
 
 
-void test_read_callback(){
-
-}
 
 void app_main()
 {
@@ -40,13 +39,16 @@ void app_main()
     ESP_ERROR_CHECK(esp_netif_init());
 
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT_STA_GOT_IP, ESP_EVENT_ANY_ID, robot_event_handler, NULL, NULL));
-  
-
-    wifi_init();
     robot_controller_init();
-    ////xTaskCreatePinnedToCore(pca9685_test, TAG, configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL, APP_CPU_NUM);
+
+    //rgbVal color = makeRGBVal(0,0,255);
+    //ws2812_init(GPIO_NUM_0);
+    //ws2812_setColors(1,&color);
+    //ESP_LOGW("LED", "led_init_ok %d",led_init_ok);
+    wifi_init();
+    //robot_controller_init();
     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void *)AF_INET, 5, NULL);
+    ////xTaskCreatePinnedToCore(pca9685_test, TAG, configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL, APP_CPU_NUM);
 
     /* SERVO_CONTROLLER_TEST*/
    
