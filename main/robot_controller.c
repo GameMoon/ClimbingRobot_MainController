@@ -28,8 +28,11 @@ void read_callback(uint8_t *data, uint8_t len){
     ESP_LOGI(ROBOT_TAG, "INCOMING DATA");
     if(len == 14){
         ESP_LOGW(ROBOT_TAG, "Data: %d", data[12]>>4);
-        set_servo_psu((data[12] & 0x10) >> 4);
+        //set_servo_psu((data[12] & 0x10) >> 4);
         set_servo_positions(data);
+    }
+    else if(len == 2){
+        set_single_servo_position(data[0], data[1]);
     }
 }
 
@@ -41,10 +44,12 @@ void write_callback(int socket){
 void client_connected(){
     robot_status = 3;
     ESP_LOGI(ROBOT_TAG, "Client connected");
+    set_servo_psu(1);
 }
 
 void client_disconnected(){
     robot_status = 2;
+    
 }
 
 void robot_controller_init(){
@@ -111,6 +116,9 @@ void led_status_task(void *pvParameters)
             color.b = 0;
             ws2812_setColors(1, &color);
             vTaskDelay(3000 / portTICK_PERIOD_MS);
+        }
+        else{
+            vTaskDelay(100/ portTICK_PERIOD_MS);
         }
 
         if(old_status == 2 && robot_status != 2) old_status = robot_status;
