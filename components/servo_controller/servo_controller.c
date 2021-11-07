@@ -21,7 +21,7 @@ static esp_err_t i2c_master_driver_initialize(void)
         .scl_io_num = i2c_gpio_scl,
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
         .master.clk_speed = i2c_frequency,
-        // .clk_flags = 0,          /*!< Optional, you can use I2C_SCLK_SRC_FLAG_* flags to choose i2c source clock here. */
+        //.clk_flags = 0,          /*!< Optional, you can use I2C_SCLK_SRC_FLAG_* flags to choose i2c source clock here. */
     };
     return i2c_param_config(i2c_port, &conf);
 }
@@ -34,7 +34,7 @@ void init_servo_controller(){
     //init i2c 
     i2c_driver_install(i2c_port, I2C_MODE_MASTER, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
     i2c_master_driver_initialize();
-    i2c_set_timeout(i2c_port, 400000);
+    i2c_set_timeout(i2c_port, 1800000);
 }
 
 void deinit_servo_controller(){
