@@ -9,9 +9,9 @@ uint8_t wifi_try = 0;
 
 void robot_event_handler(void *handler_args, esp_event_base_t event_base, int32_t event_id, void *event_data){
 
-    if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+    if (event_base == IP_EVENT && (event_id == IP_EVENT_STA_GOT_IP || event_id == IP_EVENT_AP_STAIPASSIGNED))
     {
-        ESP_LOGW(ROBOT_TAG, "WIFI connected and got IP");
+        ESP_LOGW(ROBOT_TAG, "WIFI or client connected and got IP");
         robot_status = 2;
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
@@ -66,6 +66,8 @@ void robot_controller_init(){
     //set_servo_psu(1);
     xTaskCreate(led_status_task, "led_status", 1000, (void *)AF_INET, 5, NULL);
     ESP_LOGW(ROBOT_TAG, "Controller is ready");
+
+    
 }
 
 void led_status_task(void *pvParameters)
