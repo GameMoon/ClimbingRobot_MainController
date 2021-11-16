@@ -34,7 +34,8 @@ void init_servo_controller(){
     //init i2c 
     i2c_driver_install(i2c_port, I2C_MODE_MASTER, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
     i2c_master_driver_initialize();
-    i2c_set_timeout(i2c_port, 1800000);
+    //i2c_set_timeout(i2c_port, 1800000);
+    i2c_set_timeout(i2c_port, 0xFFFFF);
 }
 
 void deinit_servo_controller(){
