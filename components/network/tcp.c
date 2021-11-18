@@ -3,9 +3,7 @@
 
 static const char *TCP_TAG = "tcp_task";
 
-
-
-void manage_tcp_message(const int sock)
+void manage_tcp_message(const int sock, TCPParams *tcpParams)
 {
     int len;
     uint8_t rx_buffer[128];
@@ -26,33 +24,28 @@ void manage_tcp_message(const int sock)
         {
             rx_buffer[len] = 0; // Null-terminate whatever is received and treat it like a string
             ESP_LOGI(TCP_TAG, "Received %d bytes", len);
-            tcp_read_callback(rx_buffer, len);
-            /*if (len == 13)
-            {
-                memcpy(positions, rx_buffer, 13);
-                // robot_controller_set_servos(raw_positions, 12);
-                set_servo_positions(positions);
-            }*/
-        }
-        tcp_write_callback(sock);
-        /*
-        read_servo_positions(positions);
-        send(sock, positions, 12, 0);*/
+            // read_callback(rx_buffer, len);
+            tcpParams->read_callback(rx_buffer,len);
 
+        }
+        tcpParams->write_callback(sock);
+            // write_callback(sock);
     } while (len > 0);
 }
 
 void tcp_server_task(void *pvParameters)
 {
+    TCPParams *tcpParams = (TCPParams*) pvParameters;
+
     char addr_str[128];
-    int addr_family = (int)pvParameters;
-    int ip_protocol = 0;
+    int addr_family = AF_INET;
+    int ip_protocol = 0; 
     struct sockaddr_in6 dest_addr;
 
     struct sockaddr_in *dest_addr_ip4 = (struct sockaddr_in *)&dest_addr;
     dest_addr_ip4->sin_addr.s_addr = htonl(INADDR_ANY);
     dest_addr_ip4->sin_family = AF_INET;
-    dest_addr_ip4->sin_port = htons(PORT);
+    dest_addr_ip4->sin_port = htons(tcpParams->port);
     ip_protocol = IPPROTO_IP;
 
     int listen_sock = socket(addr_family, SOCK_STREAM, ip_protocol);
@@ -72,7 +65,7 @@ void tcp_server_task(void *pvParameters)
         ESP_LOGE(TCP_TAG, "IPPROTO: %d", addr_family);
         goto CLEAN_UP;
     }
-    ESP_LOGI(TCP_TAG, "Socket bound, port %d", PORT);
+    ESP_LOGI(TCP_TAG, "Socket bound, port %d", tcpParams->port);
 
     err = listen(listen_sock, 1);
     if (err != 0)
@@ -81,7 +74,6 @@ void tcp_server_task(void *pvParameters)
         goto CLEAN_UP;
     }
 
-    // tcp_init_callback();
 
     while (1)
     {
@@ -100,12 +92,12 @@ void tcp_server_task(void *pvParameters)
         // Convert ip address to string
         inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
 
-        ESP_LOGI(TCP_TAG, "Socket accepted ip address: %s", addr_str);
+        ESP_LOGI(TCP_TAG, "Socket accepted ip address: %s, %d", addr_str,sock);
 
-        tcp_client_connected();
+        tcpParams->client_connected();
         send(sock,"hello",6,0);
-        manage_tcp_message(sock);
-        tcp_client_disconnected();
+        manage_tcp_message(sock,tcpParams);
+        tcpParams->client_disconnected();
 
         shutdown(sock, 0);
         close(sock);

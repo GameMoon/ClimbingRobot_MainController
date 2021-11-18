@@ -3,6 +3,7 @@
 #include "servo_controller.h"
 #include "ws2812.h"
 #include "wifi_setup.h"
+#include "cam_controller.h"
 
 static const char *ROBOT_TAG = "robot_controller";
 uint8_t wifi_try = 0;
@@ -49,43 +50,51 @@ void client_connected(){
 
 void client_disconnected(){
     robot_status = 2;
-    
 }
+
+
+
 
 void robot_controller_init(){
     ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT_STA_GOT_IP, ESP_EVENT_ANY_ID, robot_event_handler, NULL, NULL));
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, robot_event_handler, NULL, NULL));
 
-    tcp_read_callback = read_callback;
-    tcp_write_callback = write_callback;
-    tcp_client_connected = client_connected;
-    tcp_client_disconnected = client_disconnected;
+    servoConn.read_callback = read_callback;
+    servoConn.write_callback = write_callback;
+    servoConn.client_connected = client_connected;
+    servoConn.client_disconnected = client_disconnected;
+    servoConn.port = SERVO_CONN_PORT;
+    
+    camConn.read_callback = cam_read_callback;
+    camConn.write_callback = cam_write_callback;
+    camConn.client_connected = cam_client_connected;
+    camConn.client_disconnected = cam_client_disconnected;
+    camConn.port = CAM_CONN_PORT;
 
     init_servo_controller();
+    init_camera();
     //soft_servo_stop();
     //set_servo_psu(1);
-    xTaskCreate(led_status_task, "led_status", 1000, (void *)AF_INET, 5, NULL);
+    xTaskCreate(led_status_task, "led_status", 1000, NULL, 5, NULL);
     ESP_LOGW(ROBOT_TAG, "Controller is ready");
-
-    
 }
 
 void led_status_task(void *pvParameters)
 {
     uint8_t old_status = 0;
-    
+
     rgbVal color = makeRGBVal(0, 0, 0);
     ws2812_init(GPIO_NUM_0);
     ws2812_setColors(1, &color);
-   
-    while(1){
 
+    while (1)
+    {
         if (robot_status == 0)
         {
             color.r = 255;
             color.g = 0;
             color.b = 0;
-            ws2812_setColors(1, &color);       
+            ws2812_setColors(1, &color);
         }
         else if (robot_status == 1)
         {
@@ -99,7 +108,8 @@ void led_status_task(void *pvParameters)
             ws2812_setColors(1, &color);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
-        else if (robot_status == 2 && old_status != robot_status){
+        else if (robot_status == 2 && old_status != robot_status)
+        {
             color.r = 0;
             color.g = 255;
             color.b = 0;
@@ -109,7 +119,8 @@ void led_status_task(void *pvParameters)
             ws2812_setColors(1, &color);
             old_status = robot_status;
         }
-        else if(robot_status == 3){
+        else if (robot_status == 3)
+        {
             color.r = 0;
             color.g = 0;
             color.b = 255;
@@ -119,12 +130,13 @@ void led_status_task(void *pvParameters)
             ws2812_setColors(1, &color);
             vTaskDelay(3000 / portTICK_PERIOD_MS);
         }
-        else{
-            vTaskDelay(100/ portTICK_PERIOD_MS);
+        else
+        {
+            vTaskDelay(100 / portTICK_PERIOD_MS);
         }
 
-        if(old_status == 2 && robot_status != 2) old_status = robot_status;
-       
+        if (old_status == 2 && robot_status != 2)
+            old_status = robot_status;
     }
     vTaskDelete(NULL);
 }

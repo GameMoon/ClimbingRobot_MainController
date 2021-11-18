@@ -13,14 +13,24 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-#define PORT 3333
 
 // static uint16_t servo_pos[16] = {285};
 
-void (*tcp_read_callback)(uint8_t *data, uint8_t len);
-void (*tcp_write_callback)(int sock);
-void (*tcp_client_connected)(void);
-void (*tcp_client_disconnected)(void);
+typedef struct tcp_params_t
+{
+    int port;
+    void (*read_callback)(uint8_t *data, uint8_t len);
+    void (*write_callback)(int sock);
+    void (*client_connected)(void);
+    void (*client_disconnected)(void);
+
+} TCPParams;
+
+
+// void (*tcp_read_callback)(uint8_t *data, uint8_t len);
+// void (*tcp_write_callback)(int sock);
+// void (*tcp_client_connected)(void);
+// void (*tcp_client_disconnected)(void);
 
 void tcp_server_task(void *pvParameters);
 
