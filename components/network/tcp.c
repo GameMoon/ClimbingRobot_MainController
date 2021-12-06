@@ -26,9 +26,9 @@ void manage_tcp_message(const int sock, TCPParams *tcpParams)
             ESP_LOGI(TCP_TAG, "Received %d bytes", len);
             // read_callback(rx_buffer, len);
             tcpParams->read_callback(rx_buffer,len);
-
+            tcpParams->write_callback(sock);
         }
-        tcpParams->write_callback(sock);
+        
             // write_callback(sock);
     } while (len > 0);
 }
