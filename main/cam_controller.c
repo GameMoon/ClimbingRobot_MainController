@@ -29,11 +29,11 @@ static camera_config_t camera_config = {
     .ledc_channel = LEDC_CHANNEL_0,
 
     .pixel_format = PIXFORMAT_GRAYSCALE, // YUV422,GRAYSCALE,RGB565,JPEG
-    .frame_size = FRAMESIZE_VGA, // QQVGA-UXGA Do not use sizes above QVGA when not JPEG
+    .frame_size = FRAMESIZE_VGA,         // QQVGA-UXGA Do not use sizes above QVGA when not JPEG
 
-    .jpeg_quality = 12, // 0-63 lower number means higher quality
-    .fb_count = 1,      // if more than one, i2s runs in continuous mode. Use only with JPEG
-    .grab_mode = CAMERA_GRAB_WHEN_EMPTY,
+    .jpeg_quality = 12,                  // 0-63 lower number means higher quality
+    .fb_count = 1,                       // if more than one, i2s runs in continuous mode. Use only with JPEG
+    // .grab_mode = CAMERA_GRAB_WHEN_EMPTY, // CAMERA_GRAB_WHEN_EMPTY,
 };
 
 esp_err_t init_camera()
@@ -48,15 +48,27 @@ esp_err_t init_camera()
 
     return ESP_OK;
 }
+// uint8_t temp_buf[307200];
 
 void cam_write_callback(int socket){
     ESP_LOGI(CAMERA_TAG, "cam_write");
 
     camera_fb_t *pic = esp_camera_fb_get();
+    
+    if(!pic){
+        ESP_LOGI(CAMERA_TAG, "Capture failed");
+        return;
+    }
+    esp_camera_fb_return(pic);
+    pic = esp_camera_fb_get();
+    if(!pic){
+        ESP_LOGI(CAMERA_TAG, "Capture failed");
+        return;
+    }
 
-    int sent = send(socket, pic->buf,pic->len, 0);
+    int sent = send(socket, pic->buf, pic->len, 0);
     ESP_LOGI(CAMERA_TAG, "Picture taken! Its size was: %zu bytes, %d", pic->len, sizeof(camera_fb_t));
-    ESP_LOGI(CAMERA_TAG, "Width: %d, Height: %d", pic->width, pic->height);
+    ESP_LOGI(CAMERA_TAG, "Width: %d, Height: %d, time: %lu %lu", pic->width, pic->height,  pic->timestamp.tv_sec, pic->timestamp.tv_usec);
     ESP_LOGI(CAMERA_TAG, "Sent: %d, %d", sent, socket);
     esp_camera_fb_return(pic);
 }
