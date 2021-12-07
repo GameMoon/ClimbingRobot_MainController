@@ -12,6 +12,8 @@ static i2c_port_t i2c_port = I2C_NUM_0;
 static uint8_t chip_addr = 0x08;
 static const char *SERVO_TAG = "servo_controller";
 
+static uint8_t coil_state = 0;
+
 static esp_err_t i2c_master_driver_initialize(void)
 {
     i2c_config_t conf = {
@@ -138,6 +140,9 @@ uint8_t set_servo_positions(uint8_t *positions){
 }
 
 uint8_t set_coils(uint8_t value){
+    if(coil_state == value) return 1;
+
+    coil_state = value;
     uint8_t command[] = {WRITE_COIL, value};
     return send_i2c_command(command, sizeof(command));
 }

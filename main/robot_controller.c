@@ -31,6 +31,7 @@ void read_callback(uint8_t *data, uint8_t len){
         ESP_LOGW(ROBOT_TAG, "Data: %d", data[12]>>4);
         //set_servo_psu((data[12] & 0x10) >> 4);
         set_servo_positions(data);
+        set_coils(data[12]);
     }
     else if(len == 2){
         set_single_servo_position(data[0], data[1]);
@@ -51,8 +52,6 @@ void client_connected(){
 void client_disconnected(){
     robot_status = 2;
 }
-
-
 
 
 void robot_controller_init(){
